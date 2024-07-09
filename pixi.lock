@@ -1742,9 +1742,11 @@ packages:
   timestamp: 1698947249750
 - kind: pypi
   name: mobiedantic
-  version: 0.1.dev0+d20240709
+  version: 0.1.dev3+g812d4dd.d20240709
   path: .
-  sha256: dbba09558e39d1c1583837b4feb3c94f4b82d92a1d73156fd83b868d2df58b8d
+  sha256: 304e4a2d83dfa19d37fa41246b0e3054bb5a7380e6e31e5565fc2662d87142ef
+  requires_dist:
+  - pydantic
   requires_python: '>=3.8'
   editable: true
 - kind: conda
