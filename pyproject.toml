@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mobiedantic"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.8"
+license = "BSD-3-Clause"
+keywords = []
+authors = [
+  { name = "Jan Eglinger", email = "jan.eglinger@fmi.ch" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/fmi-faim/mobiedantic#readme"
+Issues = "https://github.com/fmi-faim/mobiedantic/issues"
+Source = "https://github.com/fmi-faim/mobiedantic"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/mobiedantic tests}"
+
+[tool.coverage.run]
+source_pkgs = ["mobiedantic", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/mobiedantic/__about__.py",
+]
+
+[tool.coverage.paths]
+mobiedantic = ["src/mobiedantic", "*/mobiedantic/src/mobiedantic"]
+tests = ["tests", "*/mobiedantic/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tool.pixi.pypi-dependencies]
+mobiedantic = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+datamodel-code-generator = ">=0.25.8,<0.26"
+jupyter = ">=1.0.0,<1.1"
+httpx = ">=0.27.0,<0.28"
+pydantic = ">=2.8.2,<2.9"
