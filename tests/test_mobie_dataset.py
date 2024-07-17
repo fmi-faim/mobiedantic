@@ -7,13 +7,13 @@ from mobie.validation import (
 )
 
 from mobiedantic.generated import (
-    MoBIEDatasetSchema,
-    Schema,
+    Dataset,
+    Source,
 )
 
 
 def test_dataset_schema(tmp_path):
-    dataset = MoBIEDatasetSchema(
+    dataset = Dataset(
         is2D=True,
         sources={
             'A01_C3': {'image': {'imageData': {'ome.zarr': {'relativePath': '.'}}}}
@@ -38,7 +38,7 @@ def test_dataset_schema(tmp_path):
         },
     )
 
-    dataset.sources['A01_C1'] = Schema(
+    dataset.sources['A01_C1'] = Source(
         {'image': {'imageData': {'ome.zarr': {'relativePath': '.'}}}}
     )
 
@@ -71,7 +71,7 @@ def test_existing_datasets(url):
     # NB: this can take quite long with some datasets
     # validate_with_schema(data, "dataset")
 
-    dataset = MoBIEDatasetSchema(**data)
+    dataset = Dataset(**data)
     assert dataset.model_dump(by_alias=True, exclude_none=True) == data
 
     # NB: for debugging, we can dig into nested field in detail

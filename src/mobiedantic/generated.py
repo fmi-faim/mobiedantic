@@ -555,10 +555,6 @@ class Resolution3dViewItem(RootModel[PositiveFloat]):
     root: PositiveFloat
 
 
-class Source(RootModel[constr(pattern=r'^[^,\/ ]+$')]):
-    root: constr(pattern=r'^[^,\/ ]+$')
-
-
 class ImageDisplay1(BaseModel):
     """
     Viewer state for a group of image sources.
@@ -590,7 +586,7 @@ class ImageDisplay1(BaseModel):
     showImagesIn3d: Optional[bool] = Field(
         None, description='Whether to show the images in the 3d viewer.'
     )
-    sources: List[Source] = Field(
+    sources: List[Name] = Field(
         ...,
         description='The image sources that are part of this display group. Multiple sources should be moved apart spatially with source transform(s), e.g. grid, otherwise they will not be correctly displayed in the viewer.',
         min_length=1,
@@ -1186,7 +1182,7 @@ class MoBIESourceSchema3(BaseModel):
     regions: RegionSource
 
 
-class MoBIEViewSchema(BaseModel):
+class View(BaseModel):
     """
     Schema for serializing the MoBIE viewer state
     """
@@ -1217,7 +1213,7 @@ class MoBIEViewSchema(BaseModel):
     viewerTransform: Optional[ViewerTransform] = None
 
 
-class MoBIEDatasetSchema(BaseModel):
+class Dataset(BaseModel):
     """
     Schema describing a MoBIE dataset
     """
@@ -1228,10 +1224,10 @@ class MoBIEDatasetSchema(BaseModel):
     )
     is2D: bool
     description: Optional[str] = Field(None, description='Description of the dataset')
-    sources: Dict[str, Schema] = Field(
+    sources: Dict[str, Source] = Field(
         ..., description='The list of sources in this dataset.'
     )
-    views: Dict[str, MoBIEViewSchema] = Field(
+    views: Dict[str, View] = Field(
         ..., description='The list of views in this dataset.'
     )
     defaultLocation: Optional[ViewerTransform] = Field(
@@ -1241,14 +1237,14 @@ class MoBIEDatasetSchema(BaseModel):
 
     @field_validator('views')
     @classmethod
-    def validate_default_item(cls, views: Dict[str, MoBIEViewSchema]):
+    def validate_default_item(cls, views: Dict[str, View]):
         if 'default' not in views:
             message = "The 'views' list must contain a view named 'default'"
             raise ValueError(message)
         return views
 
 
-class Schema(
+class Source(
     RootModel[
         Union[
             MoBIESourceSchema,
