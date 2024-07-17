@@ -5,6 +5,7 @@ import pytest
 from mobie.validation import (
     validate_dataset,
 )
+from pydantic import ValidationError
 
 from mobiedantic.generated import (
     Dataset,
@@ -49,6 +50,19 @@ def test_dataset_schema(tmp_path):
             json.dumps(dataset.model_dump(exclude_none=True, by_alias=True), indent=2)
         )
     validate_dataset(tmp_path, require_local_data=False)
+
+
+def test_dataset_missing_default_view():
+    with pytest.raises(ValidationError):
+        Dataset(
+            is2D=True,
+            sources={
+                'A01_C3': {'image': {'imageData': {'ome.zarr': {'relativePath': '.'}}}}
+            },
+            views={
+                'otherView': {'uiSelectionGroup': 'any', 'isExclusive': True},
+            },
+        )
 
 
 @pytest.mark.parametrize(
