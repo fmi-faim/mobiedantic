@@ -4577,9 +4577,9 @@ packages:
   timestamp: 1716276077462
 - kind: pypi
   name: mobiedantic
-  version: 0.1.dev7+gb0781b6.d20240716
+  version: 0.1.dev8+g31a71c0.d20240717
   path: .
-  sha256: 6ef32a5294f2453c3680408cf085b68ecb965286a336ebdbdf5bcadf622101d2
+  sha256: 0e5addcf037b3a0c232f024d5f0978ff191639845a2fdd145f82f057b7ad8fca
   requires_dist:
   - pydantic
   - hatch-conda<0.6,>=0.5.2 ; extra == 'hatch'

@@ -55,9 +55,6 @@ check = "mypy --install-types --non-interactive {args:src/mobiedantic tests}"
 source_pkgs = ["mobiedantic", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/mobiedantic/__about__.py",
-]
 
 [tool.coverage.paths]
 mobiedantic = ["src/mobiedantic", "*/mobiedantic/src/mobiedantic"]
