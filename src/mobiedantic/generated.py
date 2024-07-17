@@ -16,6 +16,7 @@ from pydantic import (
     confloat,
     conint,
     constr,
+    field_validator,
 )
 
 
@@ -531,6 +532,10 @@ class ColorModel(
 
 
 class SelectionColor(RootModel[ColorModel]):
+    model_config = ConfigDict(
+        use_enum_values=True,
+    )
+
     root: ColorModel = Field(
         ...,
         description='Color for the selected objects (segments, regions or spots). By default the color that follows from the current coloring scheme is used.',
@@ -561,8 +566,14 @@ class ImageDisplay1(BaseModel):
 
     model_config = ConfigDict(
         extra='forbid',
+        use_enum_values=True,
     )
-    color: ColorModel = Field(..., description='The color map.')
+    color: Union[
+        ColorModel1,
+        constr(pattern=r'^(\d+)-(\d+)-(\d+)-(\d+)$'),
+        constr(pattern=r'^r=(\d+),g=(\d+),b=(\d+),a=(\d+)$'),
+        constr(pattern=r'^r(\d+)-g(\d+)-b(\d+)-a(\d+)$'),
+    ] = Field(..., description='The color map.')
     contrastLimits: List[float] = Field(..., description='The contrast limits.')
     name: Name = Field(..., description='Name of this image display.')
     opacity: Opacity
@@ -604,6 +615,7 @@ class ImageDisplay(BaseModel):
 class SegmentationDisplay1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
+        use_enum_values=True,
     )
     opacity: Opacity
     opacityNotSelected: Optional[OpacityNotSelected] = None
@@ -674,6 +686,7 @@ class SegmentationDisplay(BaseModel):
 class RegionDisplay1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
+        use_enum_values=True,
     )
     name: Name
     sources: MapOfSources = Field(
@@ -739,6 +752,7 @@ class RegionDisplay(BaseModel):
 class SpotDisplay1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
+        use_enum_values=True,
     )
     opacity: Opacity
     opacityNotSelected: Optional[OpacityNotSelected] = None
@@ -902,6 +916,9 @@ class MergedGrid1(BaseModel):
     A grid view of multiple sources that creates an new merged source. Only valid if all sources have the same size (both in pixels and physical space).
     """
 
+    model_config = ConfigDict(
+        extra='allow',
+    )
     sources: List[Name] = Field(
         ...,
         description='The sources this transformation is applied to. After transformation all sources will get the name `<sourceName>_<mergedGridSourceName>`. `<sourceName>` still refers to the source befor transformation (useful e.g. for specifying a metadataSource)',
@@ -1200,16 +1217,6 @@ class MoBIEViewSchema(BaseModel):
     viewerTransform: Optional[ViewerTransform] = None
 
 
-class Views(BaseModel):
-    """
-    The list of views in this dataset.
-    """
-
-    default: MoBIEViewSchema = Field(
-        ..., description='The default view for this dataset.'
-    )
-
-
 class MoBIEDatasetSchema(BaseModel):
     """
     Schema describing a MoBIE dataset
@@ -1217,17 +1224,28 @@ class MoBIEDatasetSchema(BaseModel):
 
     model_config = ConfigDict(
         extra='forbid',
+        validate_assignment=True,
     )
     is2D: bool
     description: Optional[str] = Field(None, description='Description of the dataset')
     sources: Dict[str, Schema] = Field(
         ..., description='The list of sources in this dataset.'
     )
-    views: Views = Field(..., description='The list of views in this dataset.')
+    views: Dict[str, MoBIEViewSchema] = Field(
+        ..., description='The list of views in this dataset.'
+    )
     defaultLocation: Optional[ViewerTransform] = Field(
         None,
         description="Default location for the 'location' menu in the viewer. Must be a valid viewer transform. If none is given the menu will be empty.",
     )
+
+    @field_validator('views')
+    @classmethod
+    def validate_default_item(cls, views: Dict[str, MoBIEViewSchema]):
+        if 'default' not in views:
+            message = "The 'views' list must contain a view named 'default'"
+            raise ValueError(message)
+        return views
 
 
 class Schema(
