@@ -70,7 +70,10 @@ show_missing = true
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["win-64"]
+platforms = ["win-64", "osx-64"]
+
+[tool.pixi.system-requirements]
+macos = "12.7"
 
 [tool.pixi.pypi-dependencies]
 mobiedantic = { path = ".", editable = true }
@@ -85,6 +88,8 @@ pydantic = ">=2.8.2,<2.9"
 
 [tool.pixi.feature.hatch.dependencies]
 hatch = "*"
+conda = ">=24.5.0,<24.6"
+mamba = ">=1.5.8,<1.6"
 
 [tool.pixi.feature.hatch.tasks]
 test = "hatch test"
