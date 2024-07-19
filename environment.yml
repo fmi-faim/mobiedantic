@@ -1,2 +1,7 @@
+channels:
+  - conda-forge
 dependencies:
   - mobie_utils
+  - pip
+  - pip:
+    - -e .
