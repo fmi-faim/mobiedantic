@@ -1259,3 +1259,27 @@ class Source(
     ] = Field(
         ..., description='Schema describing a MoBIE source', title='MoBIESourceSchema'
     )
+
+
+class Project(BaseModel):
+    """
+    Schema describing a MoBIE project
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+        validate_assignment=True,
+    )
+    datasets: List[Name] = Field(
+        ..., description='The list of datasets available in this project.'
+    )
+    defaultDataset: str = Field(
+        ..., description='The default dataset for this project.'
+    )
+    description: Optional[str] = None
+    references: Optional[List[str]] = Field(
+        None, description='Publication or other references for this project'
+    )
+    specVersion: constr(pattern=r'0\.3\.\d+') = Field(
+        ..., description='The MoBIE spec version of this project.'
+    )
