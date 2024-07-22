@@ -54,6 +54,26 @@ class Dataset:
         data_format: str = 'ome.zarr',
     ) -> None:
         sources = {}
+        self._update_sources(
+            sources=sources,
+            path_dict=path_dict,
+            channel_index=channel_index,
+            data_format=data_format,
+        )
+        views_dict = {'default': {'uiSelectionGroup': 'view', 'isExclusive': True}}
+        self.model = DatasetSchema(
+            is2D=is2d,
+            sources=sources,
+            views=views_dict,
+        )
+
+    def _update_sources(
+        self,
+        sources: dict[str, Source],
+        path_dict: dict[str, Path],
+        channel_index: int = 0,
+        data_format: str = 'ome.zarr',
+    ):
         for name in path_dict:
             try:
                 source_path = {
@@ -77,11 +97,19 @@ class Dataset:
                 }
             }
             sources[name] = Source(**data)
-        views_dict = {'default': {'uiSelectionGroup': 'view', 'isExclusive': True}}
-        self.model = DatasetSchema(
-            is2D=is2d,
-            sources=sources,
-            views=views_dict,
+
+    def add_sources(
+        self,
+        path_dict: dict[str, Path],
+        *,
+        channel_index: int = 0,
+        data_format: str = 'ome.zarr',
+    ):
+        self._update_sources(
+            sources=self.model.sources,
+            path_dict=path_dict,
+            channel_index=channel_index,
+            data_format=data_format,
         )
 
     def add_merged_grid(
@@ -150,6 +178,15 @@ class Project:
         if make_default:
             self.model.defaultDataset = name
         return Dataset(path=dataset_folder)
+
+    def load(self):
+        project_path = self.path / 'project.json'
+        if not project_path.exists():
+            message = f'Project file not found: {project_path}'
+            raise ValueError(message)
+        with open(project_path) as project_file:
+            data = json.loads(project_file.read())
+            self.model = ProjectSchema(**data)
 
     def save(self, *, create_directory: bool = True):
         if self.model is None:
