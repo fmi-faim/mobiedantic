@@ -583,7 +583,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstandard-0.23.0-py312h331e495_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.6-h915ae27_0.conda
       - pypi: https://files.pythonhosted.org/packages/a0/92/f788d908543faad645c794cc080b221f8c90139b96611ab72911918e29c8/hatch_conda-0.5.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/7a/30/24a74c0ca887d3a75821814d292e1001571d574c4c2b217a858b09ce8b88/uv-0.2.26-py3-none-macosx_10_12_x86_64.whl
       - pypi: .
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_0.conda
@@ -812,7 +811,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstandard-0.23.0-py312h7606c53_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.6-h0ea2cb4_0.conda
       - pypi: https://files.pythonhosted.org/packages/a0/92/f788d908543faad645c794cc080b221f8c90139b96611ab72911918e29c8/hatch_conda-0.5.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/c3/39/ef4a4737cb78500fc0e3290efea12f484f0d9c666976dd3888f11d4be87c/uv-0.2.25-py3-none-macosx_10_12_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/a9/ea/75cd14c055777f21d036466bcf4d7afb49b73f7592d13747d4df1800a22a/uv-0.2.25-py3-none-win_amd64.whl
       - pypi: .
   mobie:
     channels:
@@ -8264,7 +8263,17 @@ packages:
   timestamp: 1716276077462
 - kind: pypi
   name: mobiedantic
-  version: 0.1.dev15+g2b75ef1.d20240719
+  version: 0.1.1.dev1+g7443af1
+  path: .
+  sha256: ee4f165f9d96378272ddb8bf328f59cfd946894ea2ecc99f5db005acf8be3fee
+  requires_dist:
+  - pydantic
+  - hatch-conda<0.6,>=0.5.2 ; extra == 'hatch'
+  requires_python: '>=3.8'
+  editable: true
+- kind: pypi
+  name: mobiedantic
+  version: 0.1.1.dev1+g86b62e8.d20240722
   path: .
   sha256: ee4f165f9d96378272ddb8bf328f59cfd946894ea2ecc99f5db005acf8be3fee
   requires_dist:
@@ -12164,14 +12173,8 @@ packages:
 - kind: pypi
   name: uv
   version: 0.2.25
-  url: https://files.pythonhosted.org/packages/c3/39/ef4a4737cb78500fc0e3290efea12f484f0d9c666976dd3888f11d4be87c/uv-0.2.25-py3-none-macosx_10_12_x86_64.whl
-  sha256: cc1187c0487529c9e0af750a855b540e21f5675c685c0fa400658eb9dc164739
-  requires_python: '>=3.8'
-- kind: pypi
-  name: uv
-  version: 0.2.26
-  url: https://files.pythonhosted.org/packages/7a/30/24a74c0ca887d3a75821814d292e1001571d574c4c2b217a858b09ce8b88/uv-0.2.26-py3-none-macosx_10_12_x86_64.whl
-  sha256: fd3e850921f0d51d093aaeb76d190829eefdc0345439b8f6c06103a0463cc451
+  url: https://files.pythonhosted.org/packages/a9/ea/75cd14c055777f21d036466bcf4d7afb49b73f7592d13747d4df1800a22a/uv-0.2.25-py3-none-win_amd64.whl
+  sha256: 42bb27b5f502087aff68b54a1b8e4b72e93fd6552120eb8cc14a36d204c49ce7
   requires_python: '>=3.8'
 - kind: conda
   name: uv
