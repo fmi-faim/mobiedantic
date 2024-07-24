@@ -79,9 +79,7 @@ class Dataset:
                 source_path = {
                     'channel': channel_index,
                     'relativePath': str(
-                        Path(path_dict[name]).relative_to(
-                            self.path.parent, walk_up=True
-                        )
+                        Path(path_dict[name]).relative_to(self.path, walk_up=True)
                     ),
                 }
             except (ValueError, TypeError):

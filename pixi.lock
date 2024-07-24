@@ -8263,7 +8263,7 @@ packages:
   timestamp: 1716276077462
 - kind: pypi
   name: mobiedantic
-  version: 0.1.1.dev1+g7443af1
+  version: 0.2.1.dev0+g6ca6024.d20240723
   path: .
   sha256: ee4f165f9d96378272ddb8bf328f59cfd946894ea2ecc99f5db005acf8be3fee
   requires_dist:
@@ -8273,7 +8273,7 @@ packages:
   editable: true
 - kind: pypi
   name: mobiedantic
-  version: 0.1.1.dev1+g86b62e8.d20240722
+  version: 0.2.1.dev1+g0bd0dd4
   path: .
   sha256: ee4f165f9d96378272ddb8bf328f59cfd946894ea2ecc99f5db005acf8be3fee
   requires_dist:
