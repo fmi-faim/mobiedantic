@@ -59,8 +59,15 @@ def test_dataset(tmp_path):
         name='Merged_grid_view_2',
         sources=list(sources2),
     )
+    dataset1.add_region_view(
+        name='wells',
+        map_of_sources={
+            'A01': ['A01_ch1', 'A01_ch2'],
+            'B01': ['B01_ch1', 'B01_ch2'],
+        },
+    )
     assert len(dataset1.model.sources) == 4
-    assert len(dataset1.model.views['default'].sourceDisplays) == 2
+    assert len(dataset1.model.views['default'].sourceDisplays) == 3
     assert (
         dataset1.model.views['default'].sourceDisplays[1].imageDisplay.name.root
         == 'Merged_grid_view_2'
@@ -109,11 +116,11 @@ def test_dataset_errors(tmp_path):
     filename = 'dataset.json'
     with open(tmp_path / filename, 'w'):
         pass
-    with pytest.raises(ValueError, match="'path' needs to point to a directory"):
+    with pytest.raises(ValueError, match=r"'path' needs to point to a directory"):
         Dataset(path=(tmp_path / filename))
     dataset_dir = tmp_path / 'dataset'
     dataset = Dataset(path=dataset_dir)
-    with pytest.raises(ValueError, match='Dataset not initialized.'):
+    with pytest.raises(ValueError, match=r'Dataset not initialized.'):
         dataset.save()
     sources = {
         'A01': '/path/to/source',
@@ -123,23 +130,23 @@ def test_dataset_errors(tmp_path):
         is2d=True,
     )
     with pytest.raises(
-        ValueError, match="Dataset folder doesn't exist yet and may not be created."
+        ValueError, match=r"Dataset folder doesn't exist yet and may not be created."
     ):
         dataset.save(create_directory=False)
-    with pytest.raises(ValueError, match='Dataset file not found'):
+    with pytest.raises(ValueError, match=r'Dataset file not found'):
         dataset.load()
 
 
 def test_project_errors(tmp_path):
     project = Project(tmp_path / 'non-existent_subfolder')
-    with pytest.raises(ValueError, match='Project not initialized'):
+    with pytest.raises(ValueError, match=r'Project not initialized'):
         project.save()
-    with pytest.raises(ValueError, match='Project file not found'):
+    with pytest.raises(ValueError, match=r'Project file not found'):
         project.load()
-    with pytest.raises(ValueError, match='Project not initialized'):
+    with pytest.raises(ValueError, match=r'Project not initialized'):
         project.new_dataset('dataset1')
     project.initialize_model(description='Test raising errors.')
     with pytest.raises(
-        ValueError, match="Project folder doesn't exist yet and may not be created."
+        ValueError, match=r"Project folder doesn't exist yet and may not be created."
     ):
         project.save(create_directory=False)

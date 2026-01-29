@@ -4,7 +4,15 @@ import json
 from pathlib import Path
 
 from mobiedantic.generated import Dataset as DatasetSchema
-from mobiedantic.generated import ImageDisplay, ImageDisplay1, MergedGrid, Name, Source
+from mobiedantic.generated import (
+    ImageDisplay,
+    ImageDisplay1,
+    MergedGrid,
+    Name,
+    Source,
+    RegionDisplay,
+    RegionDisplay1,
+)
 from mobiedantic.generated import Project as ProjectSchema
 
 
@@ -143,11 +151,33 @@ class Dataset:
             )
         )
 
-    # @classmethod
-    # def create(cls, path: Path, *, is2d: bool) -> "Dataset":
-    #     empty_schema = DatasetSchema(
-    #         is2D=is2d,
-    #     )
+    def add_region_view(
+        self,
+        name: str,
+        map_of_sources: dict[str, list[str]],
+        *,
+        view_name: str = 'default',
+    ) -> None:
+        # create table with single column 'region_id' containing source_names, and save as .tsv inside "tables/<name>" inside dataset folder
+        table = 'region_id\t\n'
+        for source_name in map_of_sources:
+            table += f'{source_name}\t\n'
+        tables_folder = self.path / 'tables' / name
+        tables_folder.mkdir(parents=True, exist_ok=True)
+        table_path = tables_folder / 'default.tsv'
+        with open(table_path, 'w') as table_file:
+            table_file.write(table)
+        self.model.views[view_name].sourceDisplays.append(
+            RegionDisplay(
+                regionDisplay=RegionDisplay1(
+                    name=name,
+                    sources=map_of_sources,
+                    tableSource=name,
+                    lut='glasbey',
+                    opacity=0.5,
+                )
+            )
+        )
 
 
 class Project:
