@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs", "hatch-conda"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -21,6 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -33,23 +34,8 @@ Documentation = "https://github.com/fmi-faim/mobiedantic#readme"
 Issues = "https://github.com/fmi-faim/mobiedantic/issues"
 Source = "https://github.com/fmi-faim/mobiedantic"
 
-[project.optional-dependencies]
-hatch = ["hatch-conda>=0.5.2,<0.6"]
-
 [tool.hatch.version]
 source = "vcs"
-
-[tool.hatch.envs.hatch-test]
-type = "conda"
-command = "mamba"
-environment-file = "environment.yml"
-
-[tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
-]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/mobiedantic tests}"
 
 [tool.coverage.run]
 source_pkgs = ["mobiedantic", "tests"]
@@ -70,40 +56,61 @@ show_missing = true
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["win-64", "osx-64"]
-
-[tool.pixi.system-requirements]
-macos = "12.7"
+platforms = ["win-64", "osx-64", "linux-64", "osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 mobiedantic = { path = ".", editable = true }
 
-[tool.pixi.tasks]
-
 [tool.pixi.dependencies]
+pydantic = ">=2.8.2,<3"
+
+[tool.pixi.feature.generate.dependencies]
 datamodel-code-generator = ">=0.25.8,<0.26"
-jupyter = ">=1.0.0,<1.1"
-httpx = ">=0.27.0,<0.28"
-pydantic = ">=2.8.2,<2.9"
+jupyter = ">=1.1.1,<2"
+httpx = ">=0.28.1,<0.29"
 
-[tool.pixi.feature.hatch.dependencies]
-hatch = "*"
-conda = ">=24.5.0,<24.6"
-mamba = ">=1.5.8,<1.6"
+[tool.pixi.feature.test.dependencies]
+mobie_utils = ">=0.5.4,<0.6"
+pytest = ">=8.3.4,<10"
+pytest-cov = ">=5.0.0,<8"
 
-[tool.pixi.feature.hatch.tasks]
-test = "hatch test"
+[tool.pixi.feature.test.tasks]
+test = "pytest --cov=src --cov-report term-missing"
+cov-xml = "pytest --cov=src --cov-report xml"
 
-[tool.pixi.feature.mobie.dependencies]
-mobie_utils = ">=0.5.3,<0.6"
-pytest = ">=8.2.2,<8.3"
+[tool.pixi.feature.py39.dependencies]
+python = ">=3.9,<3.10"
+
+[tool.pixi.feature.py310.dependencies]
+python = ">=3.10,<3.11"
+
+[tool.pixi.feature.py311.dependencies]
+python = ">=3.11,<3.12"
+
+[tool.pixi.feature.py312.dependencies]
+python = ">=3.12,<3.13"
+
+[tool.pixi.feature.py313.dependencies]
+python = ">=3.13,<3.14"
+
+[tool.pixi.feature.build.dependencies]
+hatch = ">=1.16.3,<2"
+
+[tool.pixi.feature.build.tasks]
+build = "hatch build"
 
 [tool.pixi.environments]
-hatch = ["hatch"]
-mobie = ["mobie"]
+default = ["py39"]
+py39 = ["py39", "test"]
+py310 = ["py310", "test"]
+py311 = ["py311", "test"]
+py312 = ["py312", "test"]
+py313 = ["py313", "test"]
+generate = ["generate"]
+build = { features = ["build"], no-default-feature = true }
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 line-length = 88
 
 [tool.ruff.lint]
