@@ -66,7 +66,7 @@ def test_dataset(tmp_path):
             'B01': ['B01_ch1', 'B01_ch2'],
         },
     )
-    assert len(dataset1.model.sources) == 4
+    assert len(dataset1.model.sources) == 5
     assert len(dataset1.model.views['default'].sourceDisplays) == 3
     assert (
         dataset1.model.views['default'].sourceDisplays[1].imageDisplay.name.root

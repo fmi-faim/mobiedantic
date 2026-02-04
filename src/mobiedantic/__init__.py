@@ -48,7 +48,7 @@ class Dataset:
             raise ValueError(message)
         with open(dataset_path) as dataset_file:
             data = json.loads(dataset_file.read())
-            self.model = DatasetSchema(**data)
+            self.set_model(DatasetSchema(**data))
 
     def set_model(self, model: DatasetSchema):
         self.model = model
@@ -167,6 +167,10 @@ class Dataset:
         table_path = tables_folder / 'default.tsv'
         with open(table_path, 'w') as table_file:
             table_file.write(table)
+        # add table source to dataset
+        self.model.sources[name] = Source(
+            {'regions': {'tableData': {'tsv': {'relativePath': f'tables/{name}'}}}}
+        )
         self.model.views[view_name].sourceDisplays.append(
             RegionDisplay(
                 regionDisplay=RegionDisplay1(
