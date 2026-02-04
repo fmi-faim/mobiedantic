@@ -49,7 +49,11 @@ def test_dataset_schema(tmp_path):
         dataset_file.write(
             json.dumps(dataset.model_dump(exclude_none=True, by_alias=True), indent=2)
         )
-    validate_dataset(tmp_path, require_local_data=False)
+    with pytest.warns(
+        DeprecationWarning,
+        match=r'Automatically retrieving remote references can be a security vulnerability and is discouraged by the JSON Schema specifications.',
+    ):
+        validate_dataset(tmp_path, require_local_data=False)
 
 
 def test_dataset_missing_default_view():
