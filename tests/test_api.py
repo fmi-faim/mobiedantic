@@ -230,6 +230,73 @@ def test_add_spots_sources_errors(tmp_path):
         dataset.add_spots_sources({'spots_empty': empty_table})
 
 
+def test_add_segmentation_display(tmp_path):
+    project = Project(tmp_path)
+    project.initialize_model(description='Testing segmentation display')
+    dataset: Dataset = project.new_dataset('Dataset_1')
+    dataset.initialize_with_paths(path_dict={'A01': '/path/to/source'}, is2d=True)
+
+    # Add segmentation sources
+    segmentations = {
+        'seg_01': Path('/path/to/segmentation1'),
+        'seg_02': Path('/path/to/segmentation2'),
+    }
+    segmentation_table_root = dataset.path / 'tables' / 'segmentation_table'
+    segmentation_table_root.mkdir(parents=True)
+    with open(segmentation_table_root / 'default.tsv', 'w', newline='') as table_file:
+        writer = csv.writer(table_file, delimiter='\t')
+        writer.writerow(['label_id', 'anchor_x', 'anchor_y', 'name'])
+        writer.writerow([1, 0.0, 0.0, 'segment_1'])
+        writer.writerow([2, 1.0, 1.0, 'segment_2'])
+    segmentation_tables = {
+        'seg_01': segmentation_table_root,
+        'seg_02': segmentation_table_root,
+    }
+    dataset.add_segmentation_sources(
+        path_dict=segmentations,
+        table_path_dict=segmentation_tables,
+        channel_index=0,
+        data_format='ome.zarr',
+    )
+
+    # Create merged grid from segmentation sources
+    dataset.add_merged_grid(
+        name='seg_merged',
+        sources=list(segmentations),
+    )
+
+    # Add segmentation display pointing to merged grid
+    dataset.add_segmentation_display(
+        name='seg_display',
+        sources=['seg_merged'],
+    )
+
+    # Verify display was added with defaults
+    assert len(dataset.model.views['default'].sourceDisplays) == 1
+    seg_display = dataset.model.views['default'].sourceDisplays[0]
+    assert seg_display.segmentationDisplay.name.root == 'seg_display'
+    assert [s.root for s in seg_display.segmentationDisplay.sources] == ['seg_merged']
+    assert seg_display.segmentationDisplay.opacity.root == 0.5
+    assert seg_display.segmentationDisplay.lut == 'glasbey'
+
+    # Add another display with custom parameters
+    dataset.add_segmentation_display(
+        name='seg_display_2',
+        sources=['seg_01', 'seg_02'],
+        opacity=0.7,
+        lut='viridis',
+    )
+
+    assert len(dataset.model.views['default'].sourceDisplays) == 2
+    seg_display_2 = dataset.model.views['default'].sourceDisplays[1]
+    assert seg_display_2.segmentationDisplay.name.root == 'seg_display_2'
+    assert [s.root for s in seg_display_2.segmentationDisplay.sources] == ['seg_01', 'seg_02']
+    assert seg_display_2.segmentationDisplay.opacity.root == 0.7
+    assert seg_display_2.segmentationDisplay.lut == 'viridis'
+
+    _validate_dataset_on_disk(dataset)
+
+
 def test_dataset_errors(tmp_path):
     filename = 'dataset.json'
     with open(tmp_path / filename, 'w'):

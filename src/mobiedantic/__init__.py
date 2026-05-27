@@ -14,6 +14,9 @@ from mobiedantic.generated import (
     Source,
     RegionDisplay,
     RegionDisplay1,
+    SegmentationDisplay,
+    SegmentationDisplay1,
+    ValueLimits,
 )
 from mobiedantic.generated import Project as ProjectSchema
 
@@ -329,6 +332,29 @@ class Dataset:
                     tableSource=name,
                     lut='glasbey',
                     opacity=0.5,
+                )
+            )
+        )
+
+    def add_segmentation_display(
+        self,
+        name: str,
+        sources: list[str],
+        *,
+        opacity: float = 0.5,
+        lut: str = 'glasbey',
+        view_name: str = 'default',
+    ) -> None:
+        if self.model.views[view_name].sourceDisplays is None:
+            self.model.views[view_name].sourceDisplays = []
+        self.model.views[view_name].sourceDisplays.append(
+            SegmentationDisplay(
+                segmentationDisplay=SegmentationDisplay1(
+                    name=name,
+                    sources=sources,
+                    opacity=opacity,
+                    lut=lut,
+                    valueLimits=ValueLimits([0, 255]),
                 )
             )
         )
