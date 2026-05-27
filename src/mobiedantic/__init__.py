@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
+import os
 from pathlib import Path
 
 from mobiedantic.generated import Dataset as DatasetSchema
@@ -75,6 +77,24 @@ class Dataset:
             views=views_dict,
         )
 
+    def _as_source_path(self, path: Path, *, channel_index: int | None = None):
+        source_path = {}
+        if channel_index is not None:
+            source_path['channel'] = channel_index
+        resolved_path = Path(path)
+        try:
+            source_path['relativePath'] = str(
+                resolved_path.relative_to(self.path).as_posix()
+            )  # TODO update walk_up=True when pinning python 3.12+
+        except ValueError:
+            try:
+                source_path['relativePath'] = os.path.relpath(resolved_path, self.path).replace(os.sep, '/')
+            except ValueError:
+                source_path['absolutePath'] = str(resolved_path.absolute())
+        except TypeError:
+            source_path['absolutePath'] = str(Path(path).absolute())
+        return source_path
+
     def _update_sources(
         self,
         sources: dict[str, Source],
@@ -83,18 +103,9 @@ class Dataset:
         data_format: str = 'ome.zarr',
     ):
         for name in path_dict:
-            try:
-                source_path = {
-                    'channel': channel_index,
-                    'relativePath': str(
-                        Path(path_dict[name]).relative_to(self.path, walk_up=True)
-                    ),
-                }
-            except (ValueError, TypeError):
-                source_path = {
-                    'channel': channel_index,
-                    'absolutePath': str(Path(path_dict[name]).absolute()),
-                }
+            source_path = self._as_source_path(
+                path_dict[name], channel_index=channel_index
+            )
             data = {
                 'image': {
                     'imageData': {
@@ -104,7 +115,7 @@ class Dataset:
             }
             sources[name] = Source(**data)
 
-    def add_sources(
+    def add_image_sources(
         self,
         path_dict: dict[str, Path],
         *,
@@ -117,6 +128,134 @@ class Dataset:
             channel_index=channel_index,
             data_format=data_format,
         )
+
+    def add_segmentation_sources(
+        self,
+        path_dict: dict[str, Path],
+        *,
+        table_path_dict: dict[str, Path] | None = None,
+        channel_index: int = 0,
+        data_format: str = 'ome.zarr',
+    ) -> None:
+        if table_path_dict is not None:
+            unknown_sources = set(table_path_dict) - set(path_dict)
+            if unknown_sources:
+                message = (
+                    'table_path_dict has keys that are not present in path_dict: '
+                    f'{sorted(unknown_sources)}'
+                )
+                raise ValueError(message)
+
+        for name, path in path_dict.items():
+            data = {
+                'segmentation': {
+                    'imageData': {
+                        data_format: self._as_source_path(
+                            path, channel_index=channel_index
+                        ),
+                    }
+                }
+            }
+            if table_path_dict is not None and name in table_path_dict:
+                data['segmentation']['tableData'] = {
+                    'tsv': self._as_source_path(table_path_dict[name])
+                }
+            self.model.sources[name] = Source(**data)
+
+    def _resolve_table_file_and_root(self, table_path: Path) -> tuple[Path, Path]:
+        direct_path = Path(table_path)
+        dataset_relative_path = self.path / direct_path
+
+        for candidate in (direct_path, dataset_relative_path):
+            if candidate.is_dir():
+                default_table = candidate / 'default.tsv'
+                if default_table.exists():
+                    return default_table, candidate
+                message = f'Default table {default_table} does not exist.'
+                raise ValueError(message)
+
+            if candidate.is_file():
+                return candidate, candidate.parent
+
+        message = f'Spot table file not found: {table_path}'
+        raise ValueError(message)
+
+    def _compute_spot_bounding_box(
+        self, table_file_path: Path
+    ) -> tuple[list[float], list[float]]:
+        delimiter = '\t' if table_file_path.suffix.lower() == '.tsv' else ','
+
+        with open(table_file_path, newline='') as table_file:
+            reader = csv.DictReader(table_file, delimiter=delimiter)
+            fieldnames = reader.fieldnames or []
+            required_columns = {'x', 'y'}
+            missing_columns = required_columns - set(fieldnames)
+            if missing_columns:
+                message = (
+                    f'Missing required columns {sorted(missing_columns)} in spot table: '
+                    f'{table_file_path}'
+                )
+                raise ValueError(message)
+
+            has_z = 'z' in fieldnames
+            min_values: list[float] | None = None
+            max_values: list[float] | None = None
+            row_count = 0
+
+            for row in reader:
+                coordinate_names = ['x', 'y', 'z'] if has_z else ['x', 'y']
+                try:
+                    values = [float(row[name]) for name in coordinate_names]
+                except (TypeError, ValueError):
+                    message = (
+                        f'Invalid numeric coordinate values in spot table: '
+                        f'{table_file_path}'
+                    )
+                    raise ValueError(message) from None
+
+                if min_values is None:
+                    min_values = values.copy()
+                    max_values = values.copy()
+                else:
+                    min_values = [
+                        min(current, value)
+                        for current, value in zip(min_values, values)
+                    ]
+                    max_values = [
+                        max(current, value)
+                        for current, value in zip(max_values, values)
+                    ]
+                row_count += 1
+
+            if row_count == 0 or min_values is None or max_values is None:
+                message = f'Spot table is empty: {table_file_path}'
+                raise ValueError(message)
+
+            return min_values, max_values
+
+    def add_spots_sources(
+        self,
+        table_path_dict: dict[str, Path],
+        *,
+        unit: str = 'micrometer',
+    ) -> None:
+        for name, table_path in table_path_dict.items():
+            table_file_path, table_root_path = self._resolve_table_file_and_root(
+                table_path
+            )
+            bounding_box_min, bounding_box_max = self._compute_spot_bounding_box(
+                table_file_path
+            )
+            self.model.sources[name] = Source(
+                **{
+                    'spots': {
+                        'boundingBoxMin': bounding_box_min,
+                        'boundingBoxMax': bounding_box_max,
+                        'tableData': {'tsv': self._as_source_path(table_root_path)},
+                        'unit': unit,
+                    }
+                }
+            )
 
     def add_merged_grid(
         self,
@@ -137,16 +276,27 @@ class Dataset:
                 }
             )
         )
+
+    def add_image_display(
+        self,
+        name: str,
+        sources: list[str],
+        *,
+        color: str = 'white',
+        contrast_limits: list[float] = [0, 255],
+        opacity: float = 1.0,
+        view_name: str = 'default',
+    ) -> None:
         if self.model.views[view_name].sourceDisplays is None:
             self.model.views[view_name].sourceDisplays = []
         self.model.views[view_name].sourceDisplays.append(
             ImageDisplay(
                 imageDisplay=ImageDisplay1(
                     name=name,
-                    color='white',
-                    opacity=1.0,
-                    contrastLimits=[0, 255],  # TODO: get from histograms/data
-                    sources=[name],
+                    color=color,
+                    opacity=opacity,
+                    contrastLimits=contrast_limits,
+                    sources=sources,
                 )
             )
         )
