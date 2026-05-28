@@ -250,16 +250,23 @@ def test_add_segmentation_display(tmp_path):
         'seg_01': Path('path/to/segmentation1'),
         'seg_02': Path('path/to/segmentation2'),
     }
-    segmentation_table_root = dataset.path / 'tables' / 'segmentation_table'
-    segmentation_table_root.mkdir(parents=True)
-    with open(segmentation_table_root / 'default.tsv', 'w', newline='') as table_file:
+    segmentation1_table_root = dataset.path / 'tables' / 'segmentation1_table'
+    segmentation1_table_root.mkdir(parents=True)
+    with open(segmentation1_table_root / 'default.tsv', 'w', newline='') as table_file:
         writer = csv.writer(table_file, delimiter='\t')
         writer.writerow(['label_id', 'anchor_x', 'anchor_y', 'name'])
         writer.writerow([1, 0.0, 0.0, 'segment_1'])
         writer.writerow([2, 1.0, 1.0, 'segment_2'])
+    segmentation2_table_root = dataset.path / 'tables' / 'segmentation2_table'
+    segmentation2_table_root.mkdir(parents=True)
+    with open(segmentation2_table_root / 'default.tsv', 'w', newline='') as table_file:
+        writer = csv.writer(table_file, delimiter='\t')
+        writer.writerow(['label_id', 'anchor_x', 'anchor_y', 'name'])
+        writer.writerow([1, 2.0, 2.0, 'segment_A'])
+        writer.writerow([2, 3.0, 3.0, 'segment_B'])
     segmentation_tables = {
-        'seg_01': segmentation_table_root,
-        'seg_02': segmentation_table_root,
+        'seg_01': segmentation1_table_root,
+        'seg_02': segmentation2_table_root,
     }
     dataset.add_segmentation_sources(
         path_dict=segmentations,
@@ -288,6 +295,8 @@ def test_add_segmentation_display(tmp_path):
     assert [s.root for s in seg_display.segmentationDisplay.sources] == ['seg_merged']
     assert seg_display.segmentationDisplay.opacity.root == 0.5
     assert seg_display.segmentationDisplay.lut == 'glasbey'
+    assert seg_display.segmentationDisplay.visible is False
+    assert seg_display.segmentationDisplay.colorByColumn is None
 
     # Add another display with custom parameters
     dataset.add_segmentation_display(
@@ -308,6 +317,7 @@ def test_add_segmentation_display(tmp_path):
     assert seg_display_2.segmentationDisplay.opacity.root == 0.7
     assert seg_display_2.segmentationDisplay.lut == 'viridis'
     assert seg_display_2.segmentationDisplay.visible is False
+    assert seg_display_2.segmentationDisplay.colorByColumn is None
 
     _validate_dataset_on_disk(dataset)
 
