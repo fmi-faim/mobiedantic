@@ -356,6 +356,7 @@ class Dataset:
         lut: str = 'glasbey',
         visible: bool | None = None,
         view_name: str = 'default',
+        color_by_column: str | None = None,
     ) -> None:
         if self.model.views[view_name].sourceDisplays is None:
             self.model.views[view_name].sourceDisplays = []
@@ -368,6 +369,7 @@ class Dataset:
                     lut=lut,
                     valueLimits=ValueLimits([0, 255]),
                     visible=visible,
+                    colorByColumn=color_by_column,
                 )
             )
         )
