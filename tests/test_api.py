@@ -48,6 +48,7 @@ def test_dataset(tmp_path):
         color='white',
         contrast_limits=[0, 255],
         opacity=0.5,
+        visible=True,
     )
     assert len(dataset1.model.views['default'].sourceDisplays) == 1
     assert (
@@ -83,19 +84,27 @@ def test_dataset(tmp_path):
         color='red',
         contrast_limits=[0, 255],
         opacity=0.5,
+        visible=True,
     )
-    dataset1.add_region_view(
+    dataset1.add_region_display(
         name='wells',
         map_of_sources={
             'A01': ['A01_ch1', 'A01_ch2'],
             'B01': ['B01_ch1', 'B01_ch2'],
         },
+        visible=False,
     )
     assert len(dataset1.model.sources) == 5
     assert len(dataset1.model.views['default'].sourceDisplays) == 3
     assert (
         dataset1.model.views['default'].sourceDisplays[1].imageDisplay.name.root
         == 'ch2'
+    )
+    assert (
+        dataset1.model.views['default'].sourceDisplays[1].imageDisplay.visible is True
+    )
+    assert (
+        dataset1.model.views['default'].sourceDisplays[2].regionDisplay.visible is False
     )
     assert len(dataset1.model.views['default'].sourceTransforms) == 2
     assert (
@@ -142,9 +151,9 @@ def test_add_segmentation_sources(tmp_path):
     project = Project(tmp_path)
     project.initialize_model(description='Testing segmentation sources')
     dataset: Dataset = project.new_dataset('Dataset_1')
-    dataset.initialize_with_paths(path_dict={'A01': '/path/to/source'}, is2d=True)
+    dataset.initialize_with_paths(path_dict={'A01': 'path/to/source'}, is2d=True)
 
-    segmentations = {'S01': Path('/path/to/segmentation')}
+    segmentations = {'S01': Path('path/to/segmentation')}
     segmentation_table_root = dataset.path / 'tables' / 'segmentation_table'
     segmentation_table_root.mkdir(parents=True)
     with open(segmentation_table_root / 'default.tsv', 'w', newline='') as table_file:
@@ -164,13 +173,13 @@ def test_add_segmentation_sources(tmp_path):
     assert segmentation_data.imageData.ome_zarr.channel == 1
     assert segmentation_data.tableData is not None
 
-    dataset.add_segmentation_sources(path_dict={'S02': Path('/path/to/seg2')})
+    dataset.add_segmentation_sources(path_dict={'S02': Path('path/to/seg2')})
     assert dataset.model.sources['S02'].root.segmentation.tableData is None
 
     with pytest.raises(ValueError, match=r'table_path_dict has keys'):
         dataset.add_segmentation_sources(
-            path_dict={'S03': Path('/path/to/seg3')},
-            table_path_dict={'UNKNOWN': Path('/path/to/table')},
+            path_dict={'S03': Path('path/to/seg3')},
+            table_path_dict={'UNKNOWN': Path('path/to/table')},
         )
     _validate_dataset_on_disk(dataset)
 
@@ -179,7 +188,7 @@ def test_add_spots_sources(tmp_path):
     project = Project(tmp_path)
     project.initialize_model(description='Testing spot sources')
     dataset: Dataset = project.new_dataset('Dataset_1')
-    dataset.initialize_with_paths(path_dict={'A01': '/path/to/source'}, is2d=True)
+    dataset.initialize_with_paths(path_dict={'A01': 'path/to/source'}, is2d=True)
 
     spots_table_root = dataset.path / 'tables' / 'spots_1'
     spots_table_root.mkdir(parents=True)
@@ -204,7 +213,7 @@ def test_add_spots_sources_errors(tmp_path):
     project = Project(tmp_path)
     project.initialize_model(description='Testing spot source errors')
     dataset: Dataset = project.new_dataset('Dataset_1')
-    dataset.initialize_with_paths(path_dict={'A01': '/path/to/source'}, is2d=True)
+    dataset.initialize_with_paths(path_dict={'A01': 'path/to/source'}, is2d=True)
 
     missing_columns_table = tmp_path / 'missing_columns.tsv'
     with open(missing_columns_table, 'w', newline='') as table_file:
@@ -234,12 +243,12 @@ def test_add_segmentation_display(tmp_path):
     project = Project(tmp_path)
     project.initialize_model(description='Testing segmentation display')
     dataset: Dataset = project.new_dataset('Dataset_1')
-    dataset.initialize_with_paths(path_dict={'A01': '/path/to/source'}, is2d=True)
+    dataset.initialize_with_paths(path_dict={'A01': 'path/to/source'}, is2d=True)
 
     # Add segmentation sources
     segmentations = {
-        'seg_01': Path('/path/to/segmentation1'),
-        'seg_02': Path('/path/to/segmentation2'),
+        'seg_01': Path('path/to/segmentation1'),
+        'seg_02': Path('path/to/segmentation2'),
     }
     segmentation_table_root = dataset.path / 'tables' / 'segmentation_table'
     segmentation_table_root.mkdir(parents=True)
@@ -269,6 +278,7 @@ def test_add_segmentation_display(tmp_path):
     dataset.add_segmentation_display(
         name='seg_display',
         sources=['seg_merged'],
+        visible=False,
     )
 
     # Verify display was added with defaults
@@ -285,14 +295,19 @@ def test_add_segmentation_display(tmp_path):
         sources=['seg_01', 'seg_02'],
         opacity=0.7,
         lut='viridis',
+        visible=False,
     )
 
     assert len(dataset.model.views['default'].sourceDisplays) == 2
     seg_display_2 = dataset.model.views['default'].sourceDisplays[1]
     assert seg_display_2.segmentationDisplay.name.root == 'seg_display_2'
-    assert [s.root for s in seg_display_2.segmentationDisplay.sources] == ['seg_01', 'seg_02']
+    assert [s.root for s in seg_display_2.segmentationDisplay.sources] == [
+        'seg_01',
+        'seg_02',
+    ]
     assert seg_display_2.segmentationDisplay.opacity.root == 0.7
     assert seg_display_2.segmentationDisplay.lut == 'viridis'
+    assert seg_display_2.segmentationDisplay.visible is False
 
     _validate_dataset_on_disk(dataset)
 

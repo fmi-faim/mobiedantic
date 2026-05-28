@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+from loguru import logger
 from pathlib import Path
 
 from mobiedantic.generated import Dataset as DatasetSchema
@@ -85,17 +86,21 @@ class Dataset:
         if channel_index is not None:
             source_path['channel'] = channel_index
         resolved_path = Path(path)
+        logger.info(f'{resolved_path=}, {self.path=}')
         try:
             source_path['relativePath'] = str(
                 resolved_path.relative_to(self.path).as_posix()
             )  # TODO update walk_up=True when pinning python 3.12+
         except ValueError:
             try:
-                source_path['relativePath'] = os.path.relpath(resolved_path, self.path).replace(os.sep, '/')
+                source_path['relativePath'] = os.path.relpath(
+                    resolved_path, self.path
+                ).replace(os.sep, '/')
             except ValueError:
                 source_path['absolutePath'] = str(resolved_path.absolute())
         except TypeError:
             source_path['absolutePath'] = str(Path(path).absolute())
+        logger.info(f'{source_path=}')
         return source_path
 
     def _update_sources(
@@ -288,6 +293,7 @@ class Dataset:
         color: str = 'white',
         contrast_limits: list[float] = [0, 255],
         opacity: float = 1.0,
+        visible: bool | None = None,
         view_name: str = 'default',
     ) -> None:
         if self.model.views[view_name].sourceDisplays is None:
@@ -300,15 +306,17 @@ class Dataset:
                     opacity=opacity,
                     contrastLimits=contrast_limits,
                     sources=sources,
+                    visible=visible,
                 )
             )
         )
 
-    def add_region_view(
+    def add_region_display(
         self,
         name: str,
         map_of_sources: dict[str, list[str]],
         *,
+        visible: bool | None = None,
         view_name: str = 'default',
     ) -> None:
         # create table with single column 'region_id' containing source_names, and save as .tsv inside "tables/<name>" inside dataset folder
@@ -324,6 +332,8 @@ class Dataset:
         self.model.sources[name] = Source(
             {'regions': {'tableData': {'tsv': {'relativePath': f'tables/{name}'}}}}
         )
+        if self.model.views[view_name].sourceDisplays is None:
+            self.model.views[view_name].sourceDisplays = []
         self.model.views[view_name].sourceDisplays.append(
             RegionDisplay(
                 regionDisplay=RegionDisplay1(
@@ -332,6 +342,7 @@ class Dataset:
                     tableSource=name,
                     lut='glasbey',
                     opacity=0.5,
+                    visible=visible,
                 )
             )
         )
@@ -343,6 +354,7 @@ class Dataset:
         *,
         opacity: float = 0.5,
         lut: str = 'glasbey',
+        visible: bool | None = None,
         view_name: str = 'default',
     ) -> None:
         if self.model.views[view_name].sourceDisplays is None:
@@ -355,6 +367,7 @@ class Dataset:
                     opacity=opacity,
                     lut=lut,
                     valueLimits=ValueLimits([0, 255]),
+                    visible=visible,
                 )
             )
         )
