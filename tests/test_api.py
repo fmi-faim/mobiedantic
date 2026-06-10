@@ -106,6 +106,20 @@ def test_dataset(tmp_path):
     assert (
         dataset1.model.views['default'].sourceDisplays[2].regionDisplay.visible is False
     )
+    assert (
+        dataset1.model.views['default'].sourceDisplays[2].regionDisplay.showAsBoundaries
+        is True
+    )
+    assert (
+        dataset1.model.views['default'].sourceDisplays[2].regionDisplay.boundaryThickness
+        == 0.05
+    )
+    assert (
+        dataset1.model.views['default']
+        .sourceDisplays[2]
+        .regionDisplay.boundaryThicknessIsRelative
+        is True
+    )
     assert len(dataset1.model.views['default'].sourceTransforms) == 2
     assert (
         dataset1.model.views['default']
