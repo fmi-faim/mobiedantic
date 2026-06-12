@@ -3,23 +3,26 @@ from __future__ import annotations
 import csv
 import json
 import os
-from loguru import logger
 from pathlib import Path
 
+from loguru import logger
+
 from mobiedantic.generated import Dataset as DatasetSchema
+from mobiedantic.generated import Project as ProjectSchema
 from mobiedantic.generated import (
     ImageDisplay,
     ImageDisplay1,
     MergedGrid,
     Name,
-    Source,
     RegionDisplay,
     RegionDisplay1,
     SegmentationDisplay,
     SegmentationDisplay1,
+    Source,
     ValueLimits,
 )
-from mobiedantic.generated import Project as ProjectSchema
+
+logger.disable('mobiedantic')
 
 
 class Dataset:
