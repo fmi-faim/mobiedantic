@@ -344,8 +344,6 @@ class Dataset:
                     opacity=0.5,
                     visible=visible,
                     showAsBoundaries=True,
-                    boundaryThickness=0.05,
-                    boundaryThicknessIsRelative=True,
                 )
             )
         )
