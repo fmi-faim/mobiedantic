@@ -13,7 +13,7 @@ def _validate_dataset_on_disk(dataset: Dataset) -> None:
         DeprecationWarning,
         match=r'Automatically retrieving remote references can be a security vulnerability and is discouraged by the JSON Schema specifications.',
     ):
-        validate_dataset(dataset.path, require_local_data=False)
+        validate_dataset(dataset.path, require_local_data=False, suppress_warnings=True)
 
 
 def test_project(tmp_path):
@@ -111,7 +111,9 @@ def test_dataset(tmp_path):
         is True
     )
     assert (
-        dataset1.model.views['default'].sourceDisplays[2].regionDisplay.boundaryThickness
+        dataset1.model.views['default']
+        .sourceDisplays[2]
+        .regionDisplay.boundaryThickness
         == 0.05
     )
     assert (

@@ -46,6 +46,7 @@ class Dataset:
                     self.model.model_dump(exclude_none=True, by_alias=True), indent=2
                 )
             )
+        logger.debug(f'Saved dataset model to {self.path / "dataset.json"}')
 
     def load(self):
         dataset_path = self.path / 'dataset.json'
@@ -55,6 +56,7 @@ class Dataset:
         with open(dataset_path) as dataset_file:
             data = json.loads(dataset_file.read())
             self.set_model(DatasetSchema(**data))
+            logger.debug(f'Loaded dataset model from {dataset_path}')
 
     def set_model(self, model: DatasetSchema):
         self.model = model
@@ -86,7 +88,6 @@ class Dataset:
         if channel_index is not None:
             source_path['channel'] = channel_index
         resolved_path = Path(path)
-        logger.info(f'{resolved_path=}, {self.path=}')
         try:
             source_path['relativePath'] = str(
                 resolved_path.relative_to(self.path).as_posix()
@@ -100,7 +101,6 @@ class Dataset:
                 source_path['absolutePath'] = str(resolved_path.absolute())
         except TypeError:
             source_path['absolutePath'] = str(Path(path).absolute())
-        logger.info(f'{source_path=}')
         return source_path
 
     def _update_sources(
