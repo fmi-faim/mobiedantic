@@ -3,8 +3,9 @@ from __future__ import annotations
 import csv
 import json
 import os
-from loguru import logger
 from pathlib import Path
+
+from loguru import logger
 
 from mobiedantic.generated import Dataset as DatasetSchema
 from mobiedantic.generated import (
@@ -12,14 +13,15 @@ from mobiedantic.generated import (
     ImageDisplay1,
     MergedGrid,
     Name,
-    Source,
     RegionDisplay,
     RegionDisplay1,
     SegmentationDisplay,
     SegmentationDisplay1,
-    ValueLimits,
+    Source,
 )
 from mobiedantic.generated import Project as ProjectSchema
+
+logger.disable('mobiedantic')
 
 
 class Dataset:
@@ -358,6 +360,8 @@ class Dataset:
         visible: bool | None = None,
         view_name: str = 'default',
         color_by_column: str | None = None,
+        value_limits: list[float] | None = None,
+        additional_tables: list[str] | None = None,
     ) -> None:
         if self.model.views[view_name].sourceDisplays is None:
             self.model.views[view_name].sourceDisplays = []
@@ -368,9 +372,10 @@ class Dataset:
                     sources=sources,
                     opacity=opacity,
                     lut=lut,
-                    valueLimits=ValueLimits([0, 255]),
+                    valueLimits=value_limits or [0, 65535],
                     visible=visible,
                     colorByColumn=color_by_column,
+                    additionalTables=additional_tables,
                 )
             )
         )

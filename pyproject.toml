@@ -110,7 +110,8 @@ target-version = "py310"
 line-length = 88
 
 [tool.ruff.lint]
-ignore = ["N815", "UP006","UP007", "UP045", "I001", "T201", "PLC0206"]
+extend-select = ["I"]
+ignore = ["N815", "UP006","UP007", "UP045", "T201", "PLC0206"]
 
 [tool.ruff.format]
 quote-style = "single"
